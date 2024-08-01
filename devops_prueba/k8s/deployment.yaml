@@ -79,4 +79,4 @@ metadata:
   namespace: ingress-nginx
 type: Opaque
 stringData:
-  GREETING: "¡Bienvenidos Devco 2!"
+  GREETING: "¡Bienvenidos !"
