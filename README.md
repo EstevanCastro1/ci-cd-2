@@ -1,5 +1,3 @@
-# ¡Descubre Cómo Realizar Este Ejercicio Práctico! [Accede Aquí](https://youtu.be/JTkZhlbKtu4)
-
 # [URL de Despliegue](https://estevanca.tech/)
 
 
@@ -262,32 +260,6 @@ El despliegue en Kubernetes se realiza a través del `Jenkinsfile` que se encuen
 - Docker
 - Kubernetes
 - Jenkins
-
-## Instalación
-
-1. Clona el repositorio:
-   ```bash
-   git clone https://github.com/tu_usuario/tu_repositorio.git
-   ```
-2. Navega al directorio del proyecto:
-   ```bash
-   cd Devco
-   ```
-
-## Uso
-
-Para construir y ejecutar la aplicación localmente, utiliza Docker:
-
-```bash
-docker build -t myapp .
-docker run -p 80:80 myapp
-```
-
-Para desplegar la aplicación en Kubernetes:
-
-```bash
-kubectl apply -f k8s/deployment.yaml
-```
 
 ## Contribuciones
 
