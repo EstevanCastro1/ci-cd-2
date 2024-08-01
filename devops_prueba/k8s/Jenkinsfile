@@ -2,7 +2,7 @@ pipeline {
     agent any
     environment {
         PROJECT_ID = 'k8-estevanca'
-        CLUSTER_NAME = 'cluster-1'
+        CLUSTER_NAME = 'cluster-2'
         LOCATION = 'us-central1-c'
         CREDENTIALS_ID = 'gcp-test'
         FOLDER = 'devops_prueba/k8s'
@@ -57,6 +57,17 @@ pipeline {
                     credentialsId: env.CREDENTIALS_ID
                 ])
             }
+        }
+    }
+    post {
+        always {
+            mail bcc: '', 
+                 body: 'Se ha desplegado correctamente', 
+                 cc: '', 
+                 from: '', 
+                 replyTo: '', 
+                 subject: 'Deploy Completo', 
+                 to: 'ca.estevan@gmail.com'
         }
     }
 }
