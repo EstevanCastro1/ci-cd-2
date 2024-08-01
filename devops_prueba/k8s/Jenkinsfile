@@ -41,7 +41,7 @@ pipeline {
         stage('Validate Substitution') {
             steps {
                 script {
-                    // Mostrar el contenid del archivo YAML para validar las sustituciones
+                    // Mostrar el contenido del archivo YAML para validar las sustituciones
                     sh "cat ${FOLDER}/deployment.yaml"
                 }
             }
