@@ -1,0 +1,12 @@
+# Dockerfile
+FROM python:3.9-slim
+WORKDIR /app
+COPY requirements.txt requirements.txt
+RUN pip install -r requirements.txt
+COPY . .
+ENV GREETING="valorsaludo"
+ENV VAR1="valor1"
+ENV VAR2="valor2"
+EXPOSE 5000
+CMD ["python", "__init__.py"]
+

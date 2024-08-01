@@ -1,0 +1,62 @@
+pipeline {
+    agent any
+    environment {
+        PROJECT_ID = 'project-id'
+        CLUSTER_NAME = 'cluster-lab'
+        LOCATION = 'us-central1-c'
+        CREDENTIALS_ID = 'gcp-test'
+        FOLDER = 'devops_prueba/k8s'
+    }
+    stages {
+        stage('Print Environment Variables') {
+            steps {
+                script {
+                    echo "REPO: ${env.REPO}"
+                    echo "TAG: ${env.TAG}"
+                }
+            }
+        }
+        stage('Extract Microservice Name') {
+            steps {
+                script {
+                    def imageTag = env.TAG
+                    def microserviceName = imageTag.split('-')[0]
+                    env.NAME = microserviceName
+                    echo "Microservice Name: ${env.NAME}"
+                }
+            }
+        }
+        stage('Prepare Deployment') {
+            steps {
+                script {
+                    // Sustituir las variables en el archivo YAML
+                    sh """
+                    sed -i 's|\\\${REPO}|${REPO}|g' ${FOLDER}/deployment.yaml
+                    sed -i 's|\\\${TAG}|${TAG}|g' ${FOLDER}/deployment.yaml
+                    sed -i 's|\\\${NAME}|${env.NAME}|g' ${FOLDER}/deployment.yaml
+                    """
+                }
+            }
+        }
+        stage('Validate Substitution') {
+            steps {
+                script {
+                    // Mostrar el contenido del archivo YAML para validar las sustituciones
+                    sh "cat ${FOLDER}/deployment.yaml"
+                }
+            }
+        }
+        stage('Deploy to GKE') {
+            steps {
+                step([
+                    $class: 'KubernetesEngineBuilder',
+                    projectId: env.PROJECT_ID,
+                    clusterName: env.CLUSTER_NAME,
+                    location: env.LOCATION,
+                    manifestPattern: "${FOLDER}/deployment.yaml",
+                    credentialsId: env.CREDENTIALS_ID
+                ])
+            }
+        }
+    }
+}

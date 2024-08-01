@@ -1,0 +1,41 @@
+pipeline {
+    agent any
+    environment {
+        TARGET_DIR = 'devops_prueba/app'
+        REPOSITORY = 'estevancastro98/devco'
+        TAG = 'test-devco'
+        IMAGE_NAME = "${env.REPOSITORY}:${env.TAG}-${BUILD_NUMBER}"
+    }
+    stages {
+        stage('Construir Imagen Docker - Etiqueta del Número de Compilación') {
+            steps {
+                script {
+                    sh "docker build -t ${env.IMAGE_NAME} ${WORKSPACE}/${env.TARGET_DIR}/"
+                }
+            }
+        }
+        stage('Escaneo de Vulnerabilidades con Trivy') {
+            steps {
+                script {
+                    def trivyOutput = sh(script: "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $WORKSPACE:/root/.cache/ aquasec/trivy:latest -q image --severity CRITICAL --light ${env.IMAGE_NAME}", returnStdout: true).trim()
+                    echo trivyOutput
+
+                    if (trivyOutput.contains('will_not_fix')) {
+                        echo "Se encontraron vulnerabilidades críticas sin corrección disponible. Subiendo la imagen."
+                    } else {
+                        error("Vulnerabilidades críticas con versiones de corrección encontradas en la imagen Docker. Aborting.")
+                    }
+                }
+            }
+        }
+        stage('Subir Imagen Docker - Etiqueta del Número de Compilación') {
+            steps {
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', 'docker-2') {
+                        sh "docker push ${env.IMAGE_NAME}"
+                    }
+                }
+            }
+        }
+    }
+}
