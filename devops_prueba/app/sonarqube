@@ -6,11 +6,24 @@ pipeline {
     }
 
     stages {
+        stage('Setup Python Environment') {
+            steps {
+                script {
+                    // Crear un entorno virtual
+                    sh 'python3 -m venv venv'
+                    // Activar el entorno virtual y actualizar pip
+                    sh './venv/bin/pip install --upgrade pip'
+                    // Instalar pytest en el entorno virtual
+                    sh './venv/bin/pip install pytest'
+                }
+            }
+        }
+
         stage('Unit Tests') {
             steps {
                 script {
-                    // Ejecutar pruebas unitarias
-                    sh 'pytest --junitxml=report.xml'
+                    // Ejecutar pruebas unitarias dentro del entorno virtual
+                    sh './venv/bin/pytest --junitxml=report.xml'
                 }
             }
         }
