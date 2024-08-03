@@ -1,49 +1,27 @@
 pipeline {
-    agent {
-        docker {
-            image 'python:3.5.1'
-            args '-v /var/jenkins_home/workspace:/var/jenkins_home/workspace'
-        }
-    }
+    agent any
 
     environment {
-        SONARQUBE_SCANNER_HOME = tool 'SonarQubeScanner'
+        SCANNER_HOME = tool name: 'SonarQubeScanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
     }
 
     stages {
-        stage('Install Dependencies') {
-            steps {
-                sh 'pip install pytest'
-            }
-        }
-        
         stage('Unit Tests') {
             steps {
                 script {
-                    sh '''
-                        cd devops_prueba
-                        pytest --junitxml=../test-reports/results.xml
-                    '''
-                }
-            }
-            post {
-                always {
-                    junit 'test-reports/results.xml'
+                    // Ejecutar pruebas unitarias
+                    sh 'pytest --junitxml=report.xml'
                 }
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                script {
-                    sh '''
-                        cd devops_prueba
-                        ${SONARQUBE_SCANNER_HOME}/bin/sonar-scanner \
-                            -Dsonar.projectKey=tu_proyecto_key \
-                            -Dsonar.sources=app \
-                            -Dsonar.host.url=http://tu_servidor_sonarqube \
-                            -Dsonar.login=tu_token_sonarqube
-                    '''
+                withSonarQubeEnv('SonarQube') { // Asume que tu servidor SonarQube está configurado con el nombre 'SonarQube'
+                    script {
+                        // Ejecutar el análisis de SonarQube
+                        sh "${SCANNER_HOME}/bin/sonar-scanner -Dsonar.projectKey=your_project_key -Dsonar.sources=devops_prueba/app -Dsonar.host.url=${SONARQUBE_URL} -Dsonar.login=${SONARQUBE_TOKEN}"
+                    }
                 }
             }
         }
@@ -51,7 +29,15 @@ pipeline {
 
     post {
         always {
-            archiveArtifacts artifacts: 'test-reports/results.xml', allowEmptyArchive: true
+            junit 'report.xml' // Publicar resultados de las pruebas unitarias
+        }
+        success {
+            script {
+                // Esperar a que el análisis de SonarQube se complete
+                timeout(time: 1, unit: 'HOURS') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
         }
     }
 }
