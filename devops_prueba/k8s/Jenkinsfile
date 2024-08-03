@@ -67,7 +67,7 @@ pipeline {
                  from: '', 
                  replyTo: '', 
                  subject: 'Deploy Completo', 
-                 to: 'ca.estevan@gmail.com'
+                 to: 'correo@exmple.com'
         }
     }
 }
