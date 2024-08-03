@@ -46,29 +46,9 @@ pipeline {
             }
         }
 
-        stage('SonarQube Quality Gate Check') {
+        stage('Quality gate') {
             steps {
-                script {
-                    def taskUrl = ""
-                    def status = "PENDING"
-                    timeout(time: 1, unit: 'HOURS') {
-                        while (status == "PENDING" || status == "IN_PROGRESS") {
-                            def response = sh(script: "curl -s ${taskUrl}", returnStdout: true).trim()
-                            def json = new groovy.json.JsonSlurper().parseText(response)
-                            status = json.task.status
-                            
-                            echo "Quality Gate status is: ${status}. Waiting for 10 seconds before checking again."
-                            if (status == "SUCCESS") {
-                                echo "Quality Gate passed with status: ${status}"
-                                break
-                            } else if (status == "FAILED") {
-                                error "Quality Gate failed with status: ${status}"
-                            } else {
-                                sleep(time: 10, unit: 'SECONDS')
-                            }
-                        }
-                    }
-                }
+                waitForQualityGate abortPipeline: true
             }
         }
     }
