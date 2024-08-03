@@ -31,7 +31,7 @@ pipeline {
             steps {
                 dir("${WORKSPACE}") {
                     script {
-                        withSonarQubeEnv('SonarQubeScanner') { // Asegúrate de que 'SonarQube' es el nombre del servidor configurado en Jenkins
+                        withSonarQubeEnv('SonarQube') { // Asegúrate de que 'SonarQube' es el nombre del servidor configurado en Jenkins
                             sh """
                             ${scannerHome}/bin/sonar-scanner \
                             -Dsonar.projectKey=your_project_key \
@@ -49,14 +49,17 @@ pipeline {
         stage('SonarQube Quality Gate Check') {
             steps {
                 script {
-                    def qualityGate = waitForQualityGate()
-                    
-                    if (qualityGate.status != 'OK') {
-                        echo "${qualityGate.status}"
-                        error "Quality Gate failed: ${qualityGate.status}"
-                    } else {
-                        echo "${qualityGate.status}"
-                        echo "SonarQube Quality Gates Passed"
+                    // Ajustar el tiempo de espera o eliminar el tiempo de espera
+                    timeout(time: 1, unit: 'HOURS') {
+                        def qualityGate = waitForQualityGate()
+                        
+                        if (qualityGate.status != 'OK') {
+                            echo "${qualityGate.status}"
+                            error "Quality Gate failed: ${qualityGate.status}"
+                        } else {
+                            echo "${qualityGate.status}"
+                            echo "SonarQube Quality Gates Passed"
+                        }
                     }
                 }
             }
@@ -66,14 +69,6 @@ pipeline {
     post {
         always {
             junit 'report.xml' // Publicar resultados de las pruebas unitarias
-        }
-        success {
-            script {
-                // Esperar a que el análisis de SonarQube se complete
-                timeout(time: 1, unit: 'HOURS') {
-                    waitForQualityGate abortPipeline: true
-                }
-            }
         }
     }
 }
