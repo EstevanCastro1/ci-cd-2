@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        SCANNER_HOME = tool name: 'scanner-name', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
+        SCANNER_HOME = tool name: 'SonarQubeScanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
     }
 
     stages {
@@ -32,14 +32,17 @@ pipeline {
             steps {
                 dir("${WORKSPACE}") {
                     script {
-                        withSonarQubeEnv('sonar') { // Asume que tu servidor SonarQube está configurado con el nombre 'sonar'
-                            sh "${SCANNER_HOME}/bin/sonar-scanner \
-                                -Dsonar.projectKey=your_project_key \
-                                -Dsonar.sources=devops_prueba/app \
-                                -Dsonar.host.url=${SONARQUBE_URL} \
-                                -Dsonar.login=${SONARQUBE_TOKEN} \
-                                -Dsonar.language=py \
-                                -Dsonar.python.version=3.11"
+                        def scannerHome = tool name: 'SonarQubeScanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
+                        withSonarQubeEnv('SonarQube') { // Reemplaza 'SonarQube' con el nombre de tu entorno configurado si es diferente
+                            sh """
+                            ${scannerHome}/bin/sonar-scanner \
+                            -Dsonar.projectKey=your_project_key \
+                            -Dsonar.projectName=your_project_name \
+                            -Dsonar.projectVersion=1.0-SNAPSHOT \
+                            -Dsonar.language=py \
+                            -Dsonar.sources=devops_prueba/app \
+                            -Dsonar.sourceEncoding=UTF-8
+                            """
                         }
                     }
                 }
@@ -50,6 +53,7 @@ pipeline {
             steps {
                 script {
                     def qualityGate = waitForQualityGate()
+                    
                     if (qualityGate.status != 'OK') {
                         echo "${qualityGate.status}"
                         error "Quality Gate failed: ${qualityGate.status}"
@@ -65,6 +69,14 @@ pipeline {
     post {
         always {
             junit 'report.xml' // Publicar resultados de las pruebas unitarias
+        }
+        success {
+            script {
+                // Esperar a que el análisis de SonarQube se complete
+                timeout(time: 1, unit: 'HOURS') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
         }
     }
 }
