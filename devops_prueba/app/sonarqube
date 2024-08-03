@@ -12,9 +12,7 @@ pipeline {
                     sh """
                     ${SCANNER_HOME}/bin/sonar-scanner \
                     -Dsonar.projectKey=devops_prueba \
-                    -Dsonar.sources=./devops_prueba/app \
-                    -Dsonar.host.url=${env.SONAR_HOST_URL} \
-                    -Dsonar.login=${env.SONAR_AUTH_TOKEN}
+                    -Dsonar.sources=./devops_prueba/app
                     """
                 }
             }
