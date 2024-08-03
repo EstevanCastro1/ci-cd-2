@@ -5,11 +5,8 @@ pipeline {
         stage('Setup Python Environment') {
             steps {
                 script {
-                    // Crear un entorno virtual
                     sh 'python3 -m venv venv'
-                    // Activar el entorno virtual y actualizar pip
                     sh './venv/bin/pip install --upgrade pip'
-                    // Instalar pytest y Flask en el entorno virtual
                     sh './venv/bin/pip install pytest flask'
                 }
             }
@@ -18,7 +15,6 @@ pipeline {
         stage('Unit Tests') {
             steps {
                 script {
-                    // Ejecutar pruebas unitarias dentro del entorno virtual
                     sh './venv/bin/pytest devops_prueba/app/test.py --junitxml=report.xml'
                 }
             }
@@ -26,12 +22,12 @@ pipeline {
 
         stage('SonarQube Code Analysis') {
             environment {
-                scannerHome = tool 'SonarQubeScanner' // Nombre del SonarQube Scanner configurado
+                scannerHome = tool 'SonarQubeScanner'
             }
             steps {
                 dir("${WORKSPACE}") {
                     script {
-                        withSonarQubeEnv('SonarQubeScanner') { // Nombre del servidor SonarQube configurado
+                        withSonarQubeEnv('SonarQubeScanner') {
                             sh """
                             ${scannerHome}/bin/sonar-scanner \
                             -Dsonar.projectKey=your_project_key \
@@ -57,14 +53,16 @@ pipeline {
 
     post {
         always {
-            junit 'report.xml' // Publicar resultados de las pruebas unitarias
+            junit 'report.xml'
             emailext attachLog: true,
                      attachmentsPattern: 'report.xml',
-                     body: 'El pipeline ha finalizado. Verifique el informe de pruebas adjunto.',
+                     body: '''
+                        <p>El pipeline ha finalizado.</p>
+                        <p>Verifique el informe de pruebas adjunto para más detalles.</p>
+                     ''',
                      subject: 'Resultado del Pipeline de Jenkins',
-                     to: 'ca.estevan@gmail.com',
-                     from: 'ca.estevan@gmail.com',
-                     mimeType: 'text/html'
+                     mimeType: 'text/html',
+                     to: 'ca.estevan@gmail.com'
         }
     }
 }
