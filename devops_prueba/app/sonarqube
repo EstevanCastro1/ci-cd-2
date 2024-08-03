@@ -1,11 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        SONARQUBE_URL = 'http://your-sonarqube-url' // URL del servidor SonarQube
-        SONARQUBE_TOKEN = 'your-sonarqube-token' // Token de autenticación para SonarQube
-    }
-
     stages {
         stage('Setup Python Environment') {
             steps {
@@ -43,8 +38,7 @@ pipeline {
                             -Dsonar.projectName=your_project_name \
                             -Dsonar.projectVersion=1.0-SNAPSHOT \
                             -Dsonar.sources=devops_prueba/app \
-                            -Dsonar.sourceEncoding=UTF-8 \
-                            -Dsonar.login=${SONARQUBE_TOKEN}
+                            -Dsonar.sourceEncoding=UTF-8
                             """
                         }
                     }
@@ -55,23 +49,23 @@ pipeline {
         stage('SonarQube Quality Gate Check') {
             steps {
                 script {
+                    def taskUrl = ""
+                    def status = "PENDING"
                     timeout(time: 1, unit: 'HOURS') {
-                        def taskId = sh(script: "curl -u ${SONARQUBE_TOKEN}: ${SONARQUBE_URL}/api/ce/task?id=your_project_key", returnStdout: true).trim()
-                        echo "SonarQube Task ID: ${taskId}"
-                        def qualityGateStatus = ""
-                        
-                        while (qualityGateStatus != 'OK' && qualityGateStatus != 'ERROR') {
-                            sleep 10
-                            def statusResponse = sh(script: "curl -u ${SONARQUBE_TOKEN}: ${SONARQUBE_URL}/api/ce/task?id=${taskId}", returnStdout: true).trim()
-                            def jsonResponse = readJSON text: statusResponse
-                            qualityGateStatus = jsonResponse.task.status
-                            echo "Current Quality Gate Status: ${qualityGateStatus}"
-                        }
-                        
-                        if (qualityGateStatus != 'OK') {
-                            error "Quality Gate failed with status: ${qualityGateStatus}"
-                        } else {
-                            echo "Quality Gate passed with status: ${qualityGateStatus}"
+                        while (status == "PENDING" || status == "IN_PROGRESS") {
+                            def response = sh(script: "curl -s ${taskUrl}", returnStdout: true).trim()
+                            def json = new groovy.json.JsonSlurper().parseText(response)
+                            status = json.task.status
+                            
+                            echo "Quality Gate status is: ${status}. Waiting for 10 seconds before checking again."
+                            if (status == "SUCCESS") {
+                                echo "Quality Gate passed with status: ${status}"
+                                break
+                            } else if (status == "FAILED") {
+                                error "Quality Gate failed with status: ${status}"
+                            } else {
+                                sleep(time: 10, unit: 'SECONDS')
+                            }
                         }
                     }
                 }
