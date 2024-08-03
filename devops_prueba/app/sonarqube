@@ -19,39 +19,11 @@ pipeline {
             }
         }
 
-        stage('Prepare Test File') {
-            steps {
-                script {
-                    // Copiar __init__.py a test.py
-                    sh 'cp devops_prueba/app/__init__.py devops_prueba/app/test.py'
-                    // Añadir una prueba básica a test.py con la indentación correcta
-                    sh '''
-                    echo "def test_home():
-    from devops_prueba.app import app
-    client = app.test_client()
-    response = client.get('/')
-    assert response.status_code == 200
-    assert response.get_json() == {'message': '¡Hola, devco!'}
-" >> devops_prueba/app/test.py
-                    '''
-                }
-            }
-        }
-
         stage('Unit Tests') {
             steps {
                 script {
                     // Ejecutar pruebas unitarias dentro del entorno virtual
                     sh './venv/bin/pytest devops_prueba/app/test.py --junitxml=report.xml'
-                }
-            }
-        }
-
-        stage('Cleanup Test File') {
-            steps {
-                script {
-                    // Eliminar el archivo test.py después de las pruebas
-                    sh 'rm devops_prueba/app/test.py'
                 }
             }
         }
