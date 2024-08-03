@@ -5,8 +5,11 @@ pipeline {
         stage('Setup Python Environment') {
             steps {
                 script {
+                    // Crear un entorno virtual
                     sh 'python3 -m venv venv'
+                    // Activar el entorno virtual y actualizar pip
                     sh './venv/bin/pip install --upgrade pip'
+                    // Instalar pytest y Flask en el entorno virtual
                     sh './venv/bin/pip install pytest flask'
                 }
             }
@@ -15,6 +18,7 @@ pipeline {
         stage('Unit Tests') {
             steps {
                 script {
+                    // Ejecutar pruebas unitarias dentro del entorno virtual
                     sh './venv/bin/pytest devops_prueba/app/test.py --junitxml=report.xml'
                 }
             }
@@ -22,12 +26,12 @@ pipeline {
 
         stage('SonarQube Code Analysis') {
             environment {
-                scannerHome = tool 'SonarQubeScanner'
+                scannerHome = tool 'SonarQubeScanner' // Nombre del SonarQube Scanner configurado
             }
             steps {
                 dir("${WORKSPACE}") {
                     script {
-                        withSonarQubeEnv('SonarQubeScanner') { 
+                        withSonarQubeEnv('SonarQubeScanner') { // Nombre del servidor SonarQube configurado
                             sh """
                             ${scannerHome}/bin/sonar-scanner \
                             -Dsonar.projectKey=your_project_key \
@@ -53,7 +57,26 @@ pipeline {
 
     post {
         always {
-            junit 'report.xml'
+            junit 'report.xml' // Publicar resultados de las pruebas unitarias
+            script {
+                def testResults = currentBuild.rawBuild.getAction(hudson.tasks.junit.TestResultAction.class)
+                def total = testResults.totalCount
+                def failed = testResults.failCount
+                def passed = total - failed
+                def resultSummary = "Total Tests: ${total}, Passed: ${passed}, Failed: ${failed}"
+                
+                emailext (
+                    subject: "Build ${currentBuild.fullDisplayName} - Test Results",
+                    body: """
+                        <h3>Build ${currentBuild.fullDisplayName} - Test Results</h3>
+                        <p>${resultSummary}</p>
+                        <p>See the full report <a href="${env.BUILD_URL}testReport">here</a>.</p>
+                    """,
+                    mimeType: 'text/html',
+                    to: 'ca.estevan@gmail.com',
+                    attachmentsPattern: 'report.xml'
+                )
+            }
         }
     }
 }
