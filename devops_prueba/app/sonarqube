@@ -2,8 +2,6 @@ pipeline {
     agent any
 
     environment {
-        SONARQUBE_SERVER = 'https://sonarqube.estevanca.tech/' // URL de tu servidor SonarQube
-        SONARQUBE_TOKEN = ' // Token de tu usuario en SonarQube
         SCANNER_HOME = tool name: 'SonarQube Scanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
     }
 
@@ -29,8 +27,6 @@ pipeline {
                     ${SCANNER_HOME}/bin/sonar-scanner \
                     -Dsonar.projectKey=devops_prueba \
                     -Dsonar.sources=./devops_prueba/app \
-                    -Dsonar.host.url=${SONARQUBE_SERVER} \
-                    -Dsonar.login=${SONARQUBE_TOKEN} \
                     -Dsonar.python.coverage.reportPaths=test-results.xml \
                     -Dsonar.python.xunit.reportPath=test-results.xml
                     """
