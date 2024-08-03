@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         SONARQUBE_SERVER = 'https://sonarqube.estevanca.tech/' // URL de tu servidor SonarQube
-        SONARQUBE_TOKEN = 'sqa_87a553942cf4350d2f9b4bd60179930dcbd0bbc9' // Token de tu usuario en SonarQube
+        SONARQUBE_TOKEN = ' // Token de tu usuario en SonarQube
         SCANNER_HOME = tool name: 'SonarQube Scanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
     }
 
