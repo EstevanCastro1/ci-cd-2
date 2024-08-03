@@ -57,6 +57,12 @@ pipeline {
                         echo "SonarQube Task URL: ${qualityGate.ceTaskUrl}"
                         echo "SonarQube Server URL: ${qualityGate.serverUrl}"
                         
+                        while (qualityGate.status == 'PENDING' || qualityGate.status == 'IN_PROGRESS') {
+                            echo "Quality Gate status is: ${qualityGate.status}. Waiting for 10 seconds before checking again."
+                            sleep(time: 10, unit: 'SECONDS')
+                            qualityGate = waitForQualityGate()
+                        }
+                        
                         if (qualityGate.status != 'OK') {
                             echo "Quality Gate failed with status: ${qualityGate.status}"
                             error "Quality Gate failed: ${qualityGate.status}"
