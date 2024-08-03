@@ -1,0 +1,49 @@
+pipeline {
+    agent any
+
+    environment {
+        SONARQUBE_SERVER = 'https://sonarqube.estevanca.tech/' // URL de tu servidor SonarQube
+        SONARQUBE_TOKEN = 'sqa_87a553942cf4350d2f9b4bd60179930dcbd0bbc9' // Token de tu usuario en SonarQube
+        SCANNER_HOME = tool name: 'SonarQube Scanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
+    }
+
+    stages {
+        stage('Preparación') {
+            steps {
+                // Instala las dependencias necesarias para ejecutar las pruebas
+                sh 'pip install -r requirements.txt'
+            }
+        }
+
+        stage('Pruebas Unitarias') {
+            steps {
+                // Ejecuta pruebas unitarias y genera un reporte compatible con SonarQube
+                sh 'pytest --junitxml=test-results.xml'
+            }
+        }
+
+        stage('Análisis de Código Estático - SonarQube') {
+            steps {
+                withSonarQubeEnv('SonarQube') { // Nombre de la instancia configurada en Jenkins
+                    sh """
+                    ${SCANNER_HOME}/bin/sonar-scanner \
+                    -Dsonar.projectKey=devops_prueba \
+                    -Dsonar.sources=./devops_prueba/app \
+                    -Dsonar.host.url=${SONARQUBE_SERVER} \
+                    -Dsonar.login=${SONARQUBE_TOKEN} \
+                    -Dsonar.python.coverage.reportPaths=test-results.xml \
+                    -Dsonar.python.xunit.reportPath=test-results.xml
+                    """
+                }
+            }
+        }
+
+        stage('Esperar Análisis de Calidad') {
+            steps {
+                timeout(time: 1, unit: 'HOURS') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+    }
+}
