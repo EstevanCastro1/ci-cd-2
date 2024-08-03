@@ -54,15 +54,15 @@ pipeline {
     post {
         always {
             junit 'report.xml'
-            emailext attachLog: true,
-                     attachmentsPattern: 'report.xml',
+            emailext attachmentsPattern: 'report.xml',
                      body: '''
                         <p>El pipeline ha finalizado.</p>
                         <p>Verifique el informe de pruebas adjunto para más detalles.</p>
                      ''',
                      subject: 'Resultado del Pipeline de Jenkins',
                      mimeType: 'text/html',
-                     to: 'ca.estevan@gmail.com'
+                     to: 'ca.estevan@gmail.com',
+                     from: 'ca.estevan@gmail.com'
         }
     }
 }
