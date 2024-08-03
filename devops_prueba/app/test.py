@@ -7,7 +7,7 @@ app.config['JSON_AS_ASCII'] = False
 
 @app.route('/')
 def home():
-    greeting = os.getenv('GREETING', '¡Hola, devco!')
+    greeting = os.getenv('GREETING', '¡Hola, devc!')
     return jsonify({"message": greeting})
 
 def test_home():
