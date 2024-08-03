@@ -31,7 +31,7 @@ pipeline {
             steps {
                 dir("${WORKSPACE}") {
                     script {
-                        withSonarQubeEnv('SonarQube') { // Nombre del servidor SonarQube configurado
+                        withSonarQubeEnv('SonarQubeScanner') { // Nombre del servidor SonarQube configurado
                             sh """
                             ${scannerHome}/bin/sonar-scanner \
                             -Dsonar.projectKey=your_project_key \
@@ -52,12 +52,11 @@ pipeline {
                     timeout(time: 1, unit: 'HOURS') {
                         def qualityGate = waitForQualityGate()
                         
-                        echo "Quality Gate status: ${qualityGate.status}"
-
-                        if (qualityGate.status == null) {
-                            error "Quality Gate status is null. Check the connection with SonarQube server."
-                        }
-
+                        echo "Quality Gate Status: ${qualityGate.status}"
+                        echo "SonarQube Task ID: ${qualityGate.taskId}"
+                        echo "SonarQube Task URL: ${qualityGate.ceTaskUrl}"
+                        echo "SonarQube Server URL: ${qualityGate.serverUrl}"
+                        
                         if (qualityGate.status != 'OK') {
                             echo "Quality Gate failed with status: ${qualityGate.status}"
                             error "Quality Gate failed: ${qualityGate.status}"
