@@ -6,7 +6,56 @@ pipeline {
         TAG = 'test-devco'
         IMAGE_NAME = "${env.REPOSITORY}:${env.TAG}-${BUILD_NUMBER}"
     }
+
     stages {
+        stage('Configurar Entorno Python') {
+            steps {
+                script {
+                    sh 'python3 -m venv venv'
+                    sh './venv/bin/pip install --upgrade pip'
+                    sh './venv/bin/pip install pytest flask'
+                }
+            }
+        }
+
+        stage('Pruebas Unitarias') {
+            steps {
+                script {
+                    sh './venv/bin/pytest devops_prueba/app/test.py --junitxml=report.xml'
+                }
+            }
+        }
+
+        stage('Análisis de Código con SonarQube') {
+            environment {
+                scannerHome = tool 'SonarQubeScanner'
+            }
+            steps {
+                dir("${WORKSPACE}") {
+                    script {
+                        withSonarQubeEnv('SonarQubeScanner') {
+                            sh """
+                            ${scannerHome}/bin/sonar-scanner \
+                            -Dsonar.projectKey=your_project_key \
+                            -Dsonar.projectName=your_project_name \
+                            -Dsonar.projectVersion=1.0-SNAPSHOT \
+                            -Dsonar.sources=devops_prueba/app \
+                            -Dsonar.sourceEncoding=UTF-8
+                            """
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Verificación de Quality Gate') {
+            steps {
+                timeout(time: 1, unit: 'HOURS') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
         stage('Construir Imagen Docker - Etiqueta del Número de Compilación') {
             steps {
                 script {
@@ -14,6 +63,7 @@ pipeline {
                 }
             }
         }
+
         stage('Escaneo de Vulnerabilidades con Trivy') {
             steps {
                 script {
@@ -28,6 +78,7 @@ pipeline {
                 }
             }
         }
+
         stage('Subir Imagen Docker - Etiqueta del Número de Compilación') {
             steps {
                 script {
@@ -36,6 +87,12 @@ pipeline {
                     }
                 }
             }
+        }
+    }
+
+    post {
+        always {
+            junit 'report.xml'
         }
     }
 }
