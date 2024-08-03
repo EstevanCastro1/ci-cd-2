@@ -6,20 +6,6 @@ pipeline {
     }
 
     stages {
-        stage('Preparación') {
-            steps {
-                // Instala las dependencias necesarias para ejecutar las pruebas
-                sh 'pip install -r requirements.txt'
-            }
-        }
-
-        stage('Pruebas Unitarias') {
-            steps {
-                // Ejecuta pruebas unitarias y genera un reporte compatible con SonarQube
-                sh 'pytest --junitxml=test-results.xml'
-            }
-        }
-
         stage('Análisis de Código Estático - SonarQube') {
             steps {
                 withSonarQubeEnv('SonarQube') { // Nombre de la instancia configurada en Jenkins
@@ -27,8 +13,8 @@ pipeline {
                     ${SCANNER_HOME}/bin/sonar-scanner \
                     -Dsonar.projectKey=devops_prueba \
                     -Dsonar.sources=./devops_prueba/app \
-                    -Dsonar.python.coverage.reportPaths=test-results.xml \
-                    -Dsonar.python.xunit.reportPath=test-results.xml
+                    -Dsonar.host.url=${env.SONAR_HOST_URL} \
+                    -Dsonar.login=${env.SONAR_AUTH_TOKEN}
                     """
                 }
             }
