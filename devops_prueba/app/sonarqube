@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        SCANNER_HOME = tool name: 'SonarQubeScanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
-    }
-
     stages {
         stage('Setup Python Environment') {
             steps {
@@ -29,17 +25,18 @@ pipeline {
         }
 
         stage('SonarQube Code Analysis') {
+            environment {
+                scannerHome = tool 'SonarQubeScanner' // Asegúrate de que este nombre coincide con la configuración en Jenkins
+            }
             steps {
                 dir("${WORKSPACE}") {
                     script {
-                        def scannerHome = tool name: 'SonarQubeScanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
-                        withSonarQubeEnv('SonarQube') { // Reemplaza 'SonarQube' con el nombre de tu entorno configurado si es diferente
+                        withSonarQubeEnv('SonarQubeScanner') { // Asegúrate de que 'SonarQube' es el nombre del servidor configurado en Jenkins
                             sh """
                             ${scannerHome}/bin/sonar-scanner \
                             -Dsonar.projectKey=your_project_key \
                             -Dsonar.projectName=your_project_name \
                             -Dsonar.projectVersion=1.0-SNAPSHOT \
-                            -Dsonar.language=py \
                             -Dsonar.sources=devops_prueba/app \
                             -Dsonar.sourceEncoding=UTF-8
                             """
@@ -49,7 +46,7 @@ pipeline {
             }
         }
 
-        stage("SonarQube Quality Gate Check") {
+        stage('SonarQube Quality Gate Check') {
             steps {
                 script {
                     def qualityGate = waitForQualityGate()
