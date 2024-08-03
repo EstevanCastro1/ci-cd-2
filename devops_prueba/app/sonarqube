@@ -70,7 +70,7 @@ pipeline {
         success {
             script {
                 // Esperar a que el análisis de SonarQube se complete
-                timeout(time: 2, unit: 'HOURS') {
+                timeout(time: 1, unit: 'HOURS') {
                     waitForQualityGate abortPipeline: true
                 }
             }
