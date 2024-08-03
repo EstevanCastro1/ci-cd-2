@@ -13,8 +13,8 @@ pipeline {
                     sh 'python3 -m venv venv'
                     // Activar el entorno virtual y actualizar pip
                     sh './venv/bin/pip install --upgrade pip'
-                    // Instalar pytest en el entorno virtual
-                    sh './venv/bin/pip install pytest'
+                    // Instalar pytest y Flask en el entorno virtual
+                    sh './venv/bin/pip install pytest flask'
                 }
             }
         }
