@@ -58,13 +58,12 @@ pipeline {
     post {
         always {
             junit 'report.xml' // Publicar resultados de las pruebas unitarias
-            script {
-                // Enviar informe de pruebas unitarias por correo electrónico
-                emailext attachmentsPattern: 'report.xml',
-                         body: 'Se ha completado el análisis y las pruebas unitarias. Adjuntamos el informe de las pruebas.',
-                         subject: 'Informe de Pruebas Unitarias y Análisis SonarQube',
-                         to: 'ca.estevan@gmail.com'
-            }
+            emailext attachLog: true,
+                     attachmentsPattern: 'report.xml',
+                     body: '''Se ha completado el pipeline.
+                              Verifique el informe de pruebas adjunto para más detalles.''',
+                     subject: 'Resultado del Pipeline de Jenkins',
+                     to: 'ca.estevan@gmail.com'
         }
     }
 }
