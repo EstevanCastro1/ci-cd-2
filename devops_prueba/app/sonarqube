@@ -22,8 +22,26 @@ pipeline {
         stage('Prepare Test File') {
             steps {
                 script {
-                    // Copiar __init__.py a test.py
-                    sh 'cp devops_prueba/app/__init__.py devops_prueba/app/test.py'
+                    // Copiar __init__.py a test.py y agregar una función de prueba
+                    sh '''
+                        cp devops_prueba/app/__init__.py devops_prueba/app/test.py
+                        echo "
+import pytest
+from flask import Flask
+from devops_prueba.app.__init__ import app
+
+@pytest.fixture
+def client():
+    app.config['TESTING'] = True
+    with app.test_client() as client:
+        yield client
+
+def test_home(client):
+    rv = client.get('/')
+    assert rv.status_code == 200
+    assert b'¡Hola, devco!' in rv.data
+" >> devops_prueba/app/test.py
+                    '''
                 }
             }
         }
