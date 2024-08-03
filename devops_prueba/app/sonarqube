@@ -2,28 +2,45 @@ pipeline {
     agent any
 
     environment {
-        SCANNER_HOME = tool name: 'SonarQube Scanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
+        SONARQUBE_SCANNER_HOME = tool 'SonarQubeScanner'
     }
 
     stages {
-        stage('Análisis de Código Estático - SonarQube') {
+        stage('Unit Tests') {
             steps {
-                withSonarQubeEnv('SonarQube') { // Nombre de la instancia configurada en Jenkins
-                    sh """
-                    ${SCANNER_HOME}/bin/sonar-scanner \
-                    -Dsonar.projectKey=devops_prueba \
-                    -Dsonar.sources=./devops_prueba/app
-                    """
+                script {
+                    // Ejecutar pruebas unitarias
+                    // Asumimos que tienes pytest instalado y configurado
+                    // Asegúrate de tener pytest como parte de tu entorno virtual o de instalación de sistema
+                    sh '''
+                        cd devops_prueba
+                        pytest
+                    '''
                 }
             }
         }
 
-        stage('Esperar Análisis de Calidad') {
+        stage('SonarQube Analysis') {
             steps {
-                timeout(time: 1, unit: 'HOURS') {
-                    waitForQualityGate abortPipeline: true
+                script {
+                    // Ejecutar análisis estático de SonarQube
+                    sh '''
+                        cd devops_prueba
+                        ${SONARQUBE_SCANNER_HOME}/bin/sonar-scanner \
+                            -Dsonar.projectKey=tu_proyecto_key \
+                            -Dsonar.sources=app \
+                            -Dsonar.host.url=http://tu_servidor_sonarqube \
+                            -Dsonar.login=tu_token_sonarqube
+                    '''
                 }
             }
+        }
+    }
+
+    post {
+        always {
+            junit 'devops_prueba/test-reports/*.xml'
+            archiveArtifacts artifacts: 'devops_prueba/test-reports/*.xml', allowEmptyArchive: true
         }
     }
 }
