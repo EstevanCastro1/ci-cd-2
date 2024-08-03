@@ -60,10 +60,11 @@ pipeline {
             junit 'report.xml' // Publicar resultados de las pruebas unitarias
             emailext attachLog: true,
                      attachmentsPattern: 'report.xml',
-                     body: '''Se ha completado el pipeline.
-                              Verifique el informe de pruebas adjunto para más detalles.''',
+                     body: 'El pipeline ha finalizado. Verifique el informe de pruebas adjunto.',
                      subject: 'Resultado del Pipeline de Jenkins',
-                     to: 'ca.estevan@gmail.com'
+                     to: 'ca.estevan@gmail.com',
+                     from: 'ca.estevan@gmail.com',
+                     mimeType: 'text/html'
         }
     }
 }
