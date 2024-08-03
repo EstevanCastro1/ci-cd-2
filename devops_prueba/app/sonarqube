@@ -59,23 +59,11 @@ pipeline {
         always {
             junit 'report.xml' // Publicar resultados de las pruebas unitarias
             script {
-                def testResults = currentBuild.rawBuild.getAction(hudson.tasks.junit.TestResultAction.class)
-                def total = testResults.totalCount
-                def failed = testResults.failCount
-                def passed = total - failed
-                def resultSummary = "Total Tests: ${total}, Passed: ${passed}, Failed: ${failed}"
-                
-                emailext (
-                    subject: "Build ${currentBuild.fullDisplayName} - Test Results",
-                    body: """
-                        <h3>Build ${currentBuild.fullDisplayName} - Test Results</h3>
-                        <p>${resultSummary}</p>
-                        <p>See the full report <a href="${env.BUILD_URL}testReport">here</a>.</p>
-                    """,
-                    mimeType: 'text/html',
-                    to: 'ca.estevan@gmail.com',
-                    attachmentsPattern: 'report.xml'
-                )
+                // Enviar informe de pruebas unitarias por correo electrónico
+                emailext attachmentsPattern: 'report.xml',
+                         body: 'Se ha completado el análisis y las pruebas unitarias. Adjuntamos el informe de las pruebas.',
+                         subject: 'Informe de Pruebas Unitarias y Análisis SonarQube',
+                         to: 'ca.estevan@gmail.com'
             }
         }
     }
