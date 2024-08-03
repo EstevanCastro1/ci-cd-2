@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        SCANNER_HOME = tool name: 'SonarQubeScanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
+        SCANNER_HOME = tool name: 'scanner-name', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
     }
 
     stages {
@@ -28,12 +28,34 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
+        stage('SonarQube Code Analysis') {
             steps {
-                withSonarQubeEnv('SonarQube') { // Asume que tu servidor SonarQube está configurado con el nombre 'SonarQube'
+                dir("${WORKSPACE}") {
                     script {
-                        // Ejecutar el análisis de SonarQube
-                        sh "${SCANNER_HOME}/bin/sonar-scanner -Dsonar.projectKey=your_project_key -Dsonar.sources=devops_prueba/app -Dsonar.host.url=${SONARQUBE_URL} -Dsonar.login=${SONARQUBE_TOKEN}"
+                        withSonarQubeEnv('sonar') { // Asume que tu servidor SonarQube está configurado con el nombre 'sonar'
+                            sh "${SCANNER_HOME}/bin/sonar-scanner \
+                                -Dsonar.projectKey=your_project_key \
+                                -Dsonar.sources=devops_prueba/app \
+                                -Dsonar.host.url=${SONARQUBE_URL} \
+                                -Dsonar.login=${SONARQUBE_TOKEN} \
+                                -Dsonar.language=py \
+                                -Dsonar.python.version=3.11"
+                        }
+                    }
+                }
+            }
+        }
+
+        stage("SonarQube Quality Gate Check") {
+            steps {
+                script {
+                    def qualityGate = waitForQualityGate()
+                    if (qualityGate.status != 'OK') {
+                        echo "${qualityGate.status}"
+                        error "Quality Gate failed: ${qualityGate.status}"
+                    } else {
+                        echo "${qualityGate.status}"
+                        echo "SonarQube Quality Gates Passed"
                     }
                 }
             }
@@ -43,14 +65,6 @@ pipeline {
     post {
         always {
             junit 'report.xml' // Publicar resultados de las pruebas unitarias
-        }
-        success {
-            script {
-                // Esperar a que el análisis de SonarQube se complete
-                timeout(time: 1, unit: 'HOURS') {
-                    waitForQualityGate abortPipeline: true
-                }
-            }
         }
     }
 }
