@@ -37,9 +37,9 @@ pipeline {
                             sh """
                             ${scannerHome}/bin/sonar-scanner \
                             -Dsonar.projectKey=your_project_key \
-                            -Dsonar.projectName=your_project_name \
+                            -Dsonar.projectName=${env.TAG} \
                             -Dsonar.projectVersion=1.0-SNAPSHOT \
-                            -Dsonar.sources=devops_prueba/app \
+                            -Dsonar.sources=${env.TARGET_DIR} \
                             -Dsonar.sourceEncoding=UTF-8
                             """
                         }
